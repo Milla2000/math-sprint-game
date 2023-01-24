@@ -21,6 +21,7 @@ const playAgainBtn = document.querySelector('.play-again');
 // Equations
 let questionAmount = 0;
 let equationsArray = [];
+let playerGuessArray = [];
 
 // Game Page
 let firstNumber = 0;
@@ -29,8 +30,67 @@ let equationObject = {};
 const wrongFormat = [];
 
 // Time
+let timer;
+let timePlayed = 0;
+let baseTime = 0;
+let penaltyTime = 0;
+let finalTime = 0;
+let finalTimeDisplay = '0.0s';
+
 
 // Scroll
+let valueY = 0;
+
+//stop timer, process results, got o score page
+function checkTime(){
+  console.log('time played: ' , timePlayed)
+  if (playerGuessArray.length == questionAmount){
+    console.log('player guess array:', playerGuessArray);
+    clearInterval(timer);
+    //check for wrong guesses and add penalty time
+    equationsArray.forEach((equation, index) =>{
+      if(equation.evaluated === playerGuessArray[index]){
+          //correct guess no penalty
+      }else{
+        //incorrect guess add penalty
+        penaltyTime +=0.5;
+      }     
+    });
+    finalTime = timePlayed + penaltyTime;
+    console.log('time:', timePlayed, 'penalty:', penaltyTime, 'final time:', finalTime );
+
+  }
+}
+
+//add a tenth of a second to time played
+function addTime(){
+  timePlayed += 0.1;
+  checkTime();
+}
+
+//start timer when game page is clicked
+function startTimer(){
+  //reset times
+  timePlayed = 0;
+  penaltyTime = 0;
+  finalTime = 0;
+  timer = setInterval(addTime, 100);
+  gamePage.removeEventListener('click', startTimer)
+
+}
+
+
+//scroll and store user selection in plaayer guess array
+function select(guessedTrue){
+  //scroll 80px at a time
+  valueY +=80;
+  itemContainer.scroll(0, valueY)
+  //add player guess to array
+  return guessedTrue ? playerGuessArray.push('true') : playerGuessArray.push('false');
+
+
+}
+
 
 //display game page
 function showGamePage(){
@@ -80,8 +140,7 @@ function createEquations() {
     equationsArray.push(equationObject);
   }
   shuffle(equationsArray); 
-  console.log('equations array', equationsArray);
-  equationsToDOM();
+  
 }
 
 //add equation to DOM
@@ -105,16 +164,19 @@ function equationsToDOM(){
 function populateGamePage() {
  // Reset DOM, Set Blank Space Above
   itemContainer.textContent = '';
-  Spacer
+  //Spacer
   const topSpacer = document.createElement('div');
- topSpacer.classList.add('height-240');
+  topSpacer.classList.add('height-240');
  // Selected Item
   const selectedItem = document.createElement('div');
- selectedItem.classList.add('selected-item');
-  Append
+  selectedItem.classList.add('selected-item');
+  //Append
   itemContainer.append(topSpacer, selectedItem);
 
  // Create Equations, Build Elements in DOM
+ createEquations();
+ //console.log('equations array', equationsArray);
+ equationsToDOM();
 
  //Set Blank Space Below
   const bottomSpacer = document.createElement('div');
@@ -142,8 +204,8 @@ function showCountdown(){
   countdownPage.hidden = false;
   splashPage.hidden = true;
   countdownStart();
-  createEquations();
-  setTimeout(showGamePage, 4000)
+  populateGamePage();
+  setTimeout(showGamePage, 400)
 }
 
 //get value from selected radio button
@@ -184,3 +246,4 @@ startForm.addEventListener('click', () =>{
 });
 //event listeners
 startForm.addEventListener('submit', SelectionQuestionAmount);
+gamePage.addEventListener('click', startTimer);
